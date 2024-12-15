@@ -8,10 +8,12 @@ using UnityEngine.SceneManagement;
 public class NewGameManager : MonoBehaviour
 {
     [Header("Configuracion del equipo")]
-    [SerializeField] private InputField teamNameInput;
     [SerializeField] private InputField coachNameInput;
     [SerializeField] private InputField coachSurnameInput;
     [SerializeField] private InputField coachAgeInput;
+
+    [Header("Botones")]
+    [SerializeField] private TMP_Dropdown teamDropdown;
 
     [Header("Botones")]
     [SerializeField] private Button startGameButton;
@@ -33,12 +35,13 @@ public class NewGameManager : MonoBehaviour
     {
         databaseManager = FindObjectOfType<DatabaseManager>();
 
+        LoadTeamsIntoDropdown();
+
         startGameButton.onClick.AddListener(StartGame);
         backButton.onClick.AddListener(BackToMainMenu);
         saveButton.onClick.AddListener(SaveGame);
         cancelButton.onClick.AddListener(CancelSaveGame);
 
-        defaultColor = teamNameInput.image.color;
     }
 
     public void OnFieldSelected(InputField field)
@@ -51,20 +54,44 @@ public class NewGameManager : MonoBehaviour
         field.image.color = defaultColor;
     }
 
+    private void LoadTeamsIntoDropdown() 
+    {
+        if (databaseManager == null)
+        {
+            Debug.LogError("DatabaseManager no encontrado.");
+            return;
+        }
+
+        // Obtener los equipos desde la base de datos
+        List<(int TeamId, string TeamName)> teams = databaseManager.ReadTeams();
+
+        // Limpiar el dropdown y añadir una opción predeterminada
+        teamDropdown.ClearOptions();
+        List<string> options = new List<string> { "Selecciona tu equipo" };
+
+        foreach (var team in teams)
+        {
+            options.Add(team.TeamName);
+        }
+
+        teamDropdown.AddOptions(options);
+        Debug.Log("Equipos cargados en el desplegable.");
+    }
+
     private void StartGame()
     {
         bool allFieldsValid = true;
 
         //Validar campos vacios
-        if (string.IsNullOrWhiteSpace(teamNameInput.text))
+        if (teamDropdown.value == 0) // La primera opción es "Selecciona tu equipo"
         {
-            MarkFieldAsError(teamNameInput);
+            MarkFieldAsError(teamDropdown);
             allFieldsValid = false;
-            Debug.Log("El nombre del equipo no puede estar vacio");
+            Debug.LogWarning("Debes seleccionar un equipo.");
         }
         else
         {
-            ResetFieldColor(teamNameInput);
+            ResetFieldColor(teamDropdown);
         }
         if (string.IsNullOrWhiteSpace(coachNameInput.text))
         {
@@ -104,20 +131,19 @@ public class NewGameManager : MonoBehaviour
         }
 
         //Guardar las selecciones del jugador
-        string teamName = teamNameInput.text;
+        string selectedTeamName = teamDropdown.options[teamDropdown.value].text;
         string coachName = coachNameInput.text;
         string coachSurname = coachSurnameInput.text;
 
         
-        PlayerPrefs.SetString("TeamName", teamName);
+        PlayerPrefs.SetString("TeamName", selectedTeamName);
         PlayerPrefs.SetString("CoachName", coachName);
         PlayerPrefs.SetString("CoachSurname", coachSurname);
         PlayerPrefs.SetInt("CoachAge", coachAge);
 
         //Guardar en la base de datos
-        databaseManager.AddTeam(teamName);
 
-        var team = databaseManager.GetTeamByName(teamName);
+        var team = databaseManager.GetTeamByName(selectedTeamName);
         int teamId = team.Value.TeamId;
 
         databaseManager.AddCoach(coachName, coachSurname, coachAge, teamId);
@@ -133,14 +159,28 @@ public class NewGameManager : MonoBehaviour
         SceneManager.LoadScene("MainMenuScene");
     }
 
-     private void MarkFieldAsError(InputField field)
+     private void MarkFieldAsError(Selectable field)
     {
-        field.image.color = errorColor;
+        if (field is InputField inputField)
+        {
+            inputField.image.color = errorColor;
+        }
+        else if (field is TMP_Dropdown dropdown)
+        {
+            dropdown.GetComponent<Image>().color = errorColor;
+        }
     }
 
-    private void ResetFieldColor(InputField field)
+    private void ResetFieldColor(Selectable field)
     {
-        field.image.color = defaultColor;
+        if (field is InputField inputField)
+        {
+            inputField.image.color = defaultColor;
+        }
+        else if (field is TMP_Dropdown dropdown)
+        {
+            dropdown.GetComponent<Image>().color = defaultColor;
+        }
     }
 
     private void SaveGame()
