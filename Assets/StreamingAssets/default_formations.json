@@ -1,0 +1,82 @@
+{
+    "teamFormations": [
+        {
+            "teamName": "Gladiadores del Balon",
+            "formation": "2-2-2",
+            "playersByPosition": [
+                {"position": "Portero", "player": "Alexander Jhonson"},
+                {"position": "Defensa 1", "player": "Isabella Garcia"},
+                {"position": "Defensa 2", "player": "Olivia Lewis"},
+                {"position": "Centro 1", "player": "James Martinez"},
+                {"position": "Centro 2", "player": "Mia Williams"},
+                {"position": "Delantero 1", "player": "William Lewis"},
+                {"position": "Delantero 2", "player": "Amelia Lopez"}
+            ]
+        },
+        {
+            "teamName": "Rayo F7",
+            "formation": "2-2-2",
+            "playersByPosition": [
+                {"position": "Portero", "player": "James Martinez"},
+                {"position": "Defensa 1", "player": "James Smith"},
+                {"position": "Defensa 2", "player": "Olivia Martinez"},
+                {"position": "Centro 1", "player": "Harper Martinez"},
+                {"position": "Centro 2", "player": "Mia Jones"},
+                {"position": "Delantero 1", "player": "Benjamin Williams"},
+                {"position": "Delantero 2", "player": "Elijah Lewis"}
+            ]
+        },
+        {
+            "teamName": "Fenix Dorado",
+            "formation": "2-2-2",
+            "playersByPosition": [
+                {"position": "Portero", "player": "Mia Williams"},
+                {"position": "Defensa 1", "player": "Lucas Jones"},
+                {"position": "Defensa 2", "player": "Lucas Garcia"},
+                {"position": "Centro 1", "player": "James Williams"},
+                {"position": "Centro 2", "player": "Amelia Jhonson"},
+                {"position": "Delantero 1", "player": "Lucas Martinez"},
+                {"position": "Delantero 2", "player": "Sophia Smith"}
+            ]
+        },
+        {
+            "teamName": "Tormenta Roja",
+            "formation": "2-2-2",
+            "playersByPosition": [
+                {"position": "Portero", "player": "Amelia Brown"},
+                {"position": "Defensa 1", "player": "Isabella Clark"},
+                {"position": "Defensa 2", "player": "Emma Smith"},
+                {"position": "Centro 1", "player": "Liam Brown"},
+                {"position": "Centro 2", "player": "William Brown"},
+                {"position": "Delantero 1", "player": "Mia Martinez"},
+                {"position": "Delantero 2", "player": "Noah Lewis"}
+            ]
+        },
+        {
+            "teamName": "Dinastia del Gol",
+            "formation": "2-2-2",
+            "playersByPosition": [
+                {"position": "Portero", "player": "Mia Clark"},
+                {"position": "Defensa 1", "player": "Harper Smith"},
+                {"position": "Defensa 2", "player": "Benjamin Brown"},
+                {"position": "Centro 1", "player": "Oliver Jones"},
+                {"position": "Centro 2", "player": "Mia Clark"},
+                {"position": "Delantero 1", "player": "Emma Martinez"},
+                {"position": "Delantero 2", "player": "Evelyn Williams"}
+            ]
+        },
+        {
+            "teamName": "Resistencia FC",
+            "formation": "2-2-2",
+            "playersByPosition": [
+                {"position": "Portero", "player": "Benjamin Jones"},
+                {"position": "Defensa 1", "player": "Charlotte Lewis"},
+                {"position": "Defensa 2", "player": "Harper Johnson"},
+                {"position": "Centro 1", "player": "Oliver Smith"},
+                {"position": "Centro 2", "player": "Ava Garcia"},
+                {"position": "Delantero 1", "player": "James Brown"},
+                {"position": "Delantero 2", "player": "Amelia Brown"}
+            ]
+        }
+    ]
+}

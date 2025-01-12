@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using Mono.Data.SqliteClient;
 using UnityEngine;
+using System;
 
 public class DatabaseManager : MonoBehaviour
 {
@@ -19,34 +20,27 @@ public class DatabaseManager : MonoBehaviour
         if (instance == null)
         {
             instance = this;
-            DontDestroyOnLoad(gameObject); // Hacer que este objeto persista entre escenas
+            DontDestroyOnLoad(gameObject);
             InitializeDatabase();
         }
         else
         {
-            Destroy(gameObject); // Eliminar instancias adicionales
+            Destroy(gameObject);
         }
     }
 
     private void InitializeDatabase()
     {
         dbPath = Path.Combine(Application.persistentDataPath, "GameDatabase.db");
-        Debug.Log("Ruta de la base de datos: " + dbPath);
 
         if (!File.Exists(dbPath))
         {
-            Debug.Log("Creando nueva base de datos...");
             CreateDatabase();
-        }
-        else
-        {
-            Debug.Log("Base de datos ya existente.");
         }
 
         IsReady = true;
     }
 
-    //Crear base de datos
     private void CreateDatabase()
     {
         using (var connection = new SqliteConnection($"URI = file:{dbPath}")) 
@@ -70,7 +64,9 @@ public class DatabaseManager : MonoBehaviour
                         Surname TEXT,
                         Age INTENGER,
                         Attack INTEGER,
+                        Center INTEGER,
                         Defense INTEGER,
+                        Goalkeeper INTEGER,
                         Stamina INTEGER,
                         TeamId INTEGER,
                         FOREIGN KEY(TeamId) REFERENCES Teams(Id)
@@ -88,24 +84,13 @@ public class DatabaseManager : MonoBehaviour
                         FOREIGN KEY(TeamId) REFERENCES Teams(Id)
                     );";
                 command.ExecuteNonQuery();
-
-                //Crear la tabla partidas guardadas
-                command.CommandText = @"
-                    CREATE TABLE IF NOT EXISTS SavedGames (
-                        GameId INTEGER PRIMARY KEY AUTOINCREMENT,
-                        GameName TEXT NOT NULL
-                    );";
-                command.ExecuteNonQuery();
             }
             connection.Close();
         }
-        Debug.Log("Base de datos creada en : " +  dbPath);
     }
 
-    //A�adir datos la BBDD mediante archivos CSV
-    /*private void LoadDataFromCSV()
+    private void LoadDataFromCSV()
     {
-        //A�adir jugadores
         string PlayersPath = Path.Combine(Application.streamingAssetsPath, "players.csv");
         if (File.Exists(PlayersPath))
         {
@@ -113,11 +98,10 @@ public class DatabaseManager : MonoBehaviour
             foreach (var line in lines.Skip(1))
             {
                 var data = line.Split(",");
-                AddPlayer(data[0], data[1], int.Parse(data[2]), int.Parse(data[3]), int.Parse(data[4]), int.Parse(data[5]), int.Parse(data[6]));
+                AddPlayer(data[0], data[1], int.Parse(data[2]), int.Parse(data[3]), int.Parse(data[4]), int.Parse(data[5]), int.Parse(data[6]), int.Parse(data[7]), int.Parse(data[8]));
             }
         }
 
-        //A�adir equipos
         string TeamsPath = Path.Combine(Application.streamingAssetsPath, "teams.csv");
         if (File.Exists(TeamsPath))
         {
@@ -128,9 +112,7 @@ public class DatabaseManager : MonoBehaviour
                 AddTeam(data[0]);
             }
         }
-        Debug.Log("Datos iniciales cargados desde CSV.");
 
-        //A�adir entrenadores
         string CoachesPath = Path.Combine(Application.streamingAssetsPath, "coaches.csv");
         if (File.Exists(CoachesPath))
         {
@@ -141,7 +123,7 @@ public class DatabaseManager : MonoBehaviour
                 AddCoach(data[0], data[1], int.Parse(data[2]), int.Parse(data[3]));
             }
         }
-    }*/
+    }
 
     private void Start()
     {
@@ -151,45 +133,53 @@ public class DatabaseManager : MonoBehaviour
         //Verificar si existe
         if (!File.Exists(dbPath))
         {
-            Debug.Log("Creando nueva base de datos...");
-            Debug.Log("Ruta de la base de datos: " + dbPath);
             CreateDatabase();
             VerifyTables();
         }
         else
         {
-            Debug.Log("Base de datos ya existente.");
             VerifyTables();
-            //LoadDataFromCSV();
+            LoadDataFromCSV();
         }
     }
 
-    //A�adir jugador en la tabla
-    public void AddPlayer(string name, string surname, int age, int attack, int defense, int stamina, int teamId)
+    public void AddPlayer(string name, string surname, int age, int attack, int center, int defense, int goalkeeper, int stamina, int teamId)
     {
         using (var connection = new SqliteConnection($"URI = file:{dbPath}"))
         {
             connection.Open();
             using (var command = connection.CreateCommand())
             {
+                //Verificar si el jugador ya existe
+                command.CommandText = "SELECT COUNT(*) FROM Players WHERE Name = @Name AND Surname = @Surname;";
+                command.Parameters.Add(new SqliteParameter("@Name", name));
+                command.Parameters.Add(new SqliteParameter("@Surname", surname));
+                int count = Convert.ToInt32(command.ExecuteScalar());
+
+                if (count > 0)
+                {
+                    return;
+                }
+
+            //Insertar jugador
                 command.CommandText = @"
-                    INSERT INTO Players (Name, Surname, Age, Attack, Defense, Stamina, TeamId) 
-                    VALUES (@Name, @Surname, @Age, @Attack, @Defense, @Stamina, @TeamId);";
+                    INSERT INTO Players (Name, Surname, Age, Attack, Center, Defense, Goalkeeper, Stamina, TeamId) 
+                    VALUES (@Name, @Surname, @Age, @Attack, @Center, @Defense, @Goalkeeper, @Stamina, @TeamId);";
                 command.Parameters.Add(new SqliteParameter("@Name", name));
                 command.Parameters.Add(new SqliteParameter("@Surname", surname));
                 command.Parameters.Add(new SqliteParameter("@Age", age));
                 command.Parameters.Add(new SqliteParameter("@Attack", attack));
+                command.Parameters.Add(new SqliteParameter("@Center", center));
                 command.Parameters.Add(new SqliteParameter("@Defense", defense));
+                command.Parameters.Add(new SqliteParameter("@Goalkeeper", goalkeeper));
                 command.Parameters.Add(new SqliteParameter("@Stamina", stamina));
                 command.Parameters.Add(new SqliteParameter("@TeamId", teamId));
                 command.ExecuteNonQuery();
             }
             connection.Close();
         }
-        Debug.Log($"Jugador añadido: {name} {surname}");
     }
 
-    //A�adir entrenador en la tabla
     public void AddCoach(string name, string surname, int age, int teamId)
     {
         using (var connection = new SqliteConnection($"URI = file:{dbPath}"))
@@ -197,6 +187,18 @@ public class DatabaseManager : MonoBehaviour
             connection.Open();
             using (var command = connection.CreateCommand())
             {
+                //Verificar si el entrenador ya existe
+                command.CommandText = "SELECT COUNT(*) FROM Coaches WHERE Name = @Name AND Surname = @Surname;";
+                command.Parameters.Add(new SqliteParameter("@Name", name));
+                command.Parameters.Add(new SqliteParameter("@Surname", surname));
+                int count = Convert.ToInt32(command.ExecuteScalar());
+
+                if (count > 0)
+                {
+                    return;
+                }
+
+                //Insertar entrenador
                 command.CommandText = @"
                     INSERT INTO Coaches (Name, Surname, Age, TeamId)
                     VALUES (@Name, @Surname, @Age, @TeamId);";
@@ -208,10 +210,8 @@ public class DatabaseManager : MonoBehaviour
             }
             connection.Close();
         }
-        Debug.Log($"Entrenador a�adido: {name} {surname}");
     }
 
-    //A�adir equipo a la tabla
     public void AddTeam(string name)
     {
         using (var connection = new SqliteConnection($"URI = file:{dbPath}"))
@@ -219,6 +219,17 @@ public class DatabaseManager : MonoBehaviour
             connection.Open();
             using (var command = connection.CreateCommand())
             {
+                //Verificar si el equipo ya existe
+                command.CommandText = "SELECT COUNT(*) FROM Teams WHERE Name = @Name;";
+                command.Parameters.Add(new SqliteParameter("@Name", name));
+                int count = Convert.ToInt32(command.ExecuteScalar());
+
+                if (count > 0)
+                {
+                    return;
+                }
+
+                //Insertar equipo
                 command.CommandText = @"
                     INSERT INTO Teams (Name)
                     VALUES (@Name);";
@@ -227,10 +238,8 @@ public class DatabaseManager : MonoBehaviour
             }
             connection.Close();
         }
-        Debug.Log($"Equipo añadido: {name}");
     }
 
-    //Consultar tabla jugadores
     public void ReadPlayers()
     {
         using (var connection = new SqliteConnection($"URI = file:{dbPath}"))
@@ -243,7 +252,7 @@ public class DatabaseManager : MonoBehaviour
                 {
                     while (reader.Read())
                     {
-                        Debug.Log($"Jugador: {reader["Name"]} {reader["Surname"]}, Edad: {reader["Age"]}, Ataque: {reader["Attack"]}, Defensa: {reader["Defense"]}, Resistencia: {reader["Stamina"]}, Equipo: {reader["TeamId"]}");
+                        Debug.Log($"Jugador: {reader["Name"]} {reader["Surname"]}, Edad: {reader["Age"]}, Ataque: {reader["Attack"]}, Medio: {reader["Center"]}, Defensa: {reader["Defense"]}, Portero{reader["Goalkeeper"]}, Resistencia: {reader["Stamina"]}, Equipo: {reader["TeamId"]}");
                     }
                 }
             }
@@ -251,7 +260,6 @@ public class DatabaseManager : MonoBehaviour
         }
     }
 
-    //Consultar tabla entrenadores
     public void ReadCoaches()
     {
         using (var connection = new SqliteConnection($"URI = file:{dbPath}"))
@@ -319,7 +327,6 @@ public class DatabaseManager : MonoBehaviour
                 }
             }
         }
-        Debug.LogWarning($"No se encontró un equipo con el ID {teamId}.");
         return null;
     }
 
@@ -430,25 +437,62 @@ public class DatabaseManager : MonoBehaviour
                 }
             }
         }
-        return null; // Si no se encuentra la partida
+        return null;
     }
 
     private void VerifyTables()
-{
-    using (var connection = new SqliteConnection($"URI=file:{dbPath}"))
     {
-        connection.Open();
-        using (var command = connection.CreateCommand())
+        using (var connection = new SqliteConnection($"URI=file:{dbPath}"))
         {
-            command.CommandText = "SELECT name FROM sqlite_master WHERE type='table';";
-            using (var reader = command.ExecuteReader())
+            connection.Open();
+            using (var command = connection.CreateCommand())
             {
-                while (reader.Read())
+                command.CommandText = "SELECT name FROM sqlite_master WHERE type='table';";
+                using (var reader = command.ExecuteReader())
                 {
-                    Debug.Log($"Tabla existente: {reader.GetString(0)}");
+                    while (reader.Read())
+                    {
+                    
+                    }
                 }
             }
         }
     }
-}
+
+    public List<(string name, string surname, int attack, int defense, int center, int goalkeeper, int stamina)> GetPlayersByTeamName(string teamName)
+    {
+        var players = new List<(string, string, int, int, int, int, int)>();
+
+        using (var connection = new SqliteConnection($"URI=file:{dbPath}"))
+        {
+            connection.Open();
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = @"
+                    SELECT p.Name, p.Surname, p.Attack, p.Defense, p.Center, p.Goalkeeper, p.Stamina
+                    FROM Players p
+                    JOIN Teams t ON p.TeamId = t.Id
+                    WHERE t.Name = @TeamName;";
+
+                command.Parameters.Add(new SqliteParameter("@TeamName", teamName));
+
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        string name = reader.GetString(0);
+                        string surname = reader.GetString(1);
+                        int attack = reader.GetInt32(2);
+                        int defense = reader.GetInt32(3);
+                        int center = reader.GetInt32(4);
+                        int goalkeeper = reader.GetInt32(5);
+                        int stamina = reader.GetInt32(6);
+
+                        players.Add((name, surname, attack, defense, center, goalkeeper, stamina));
+                    }
+                }
+            }
+        }
+        return players;
+    }
 }

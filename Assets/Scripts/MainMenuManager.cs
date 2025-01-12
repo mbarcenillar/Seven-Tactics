@@ -23,12 +23,10 @@ public class MainMenuManager : MonoBehaviour, IPointerEnterHandler, IPointerExit
         }
 
         newGameText = newGameButton.text;
-        Debug.Log($"Texto asignado: {newGameButton.text}");
     }
 
     public void OnPointerEnter(PointerEventData eventData)
     {
-        Debug.Log($"Texto asignado: {newGameButton.text}");
         newGameButton.text = $"<u>{newGameText}</u>";
         newGameButton.ForceMeshUpdate();
     }
@@ -46,7 +44,6 @@ public class MainMenuManager : MonoBehaviour, IPointerEnterHandler, IPointerExit
 
     public void LoadGame()
     {
-        Debug.Log("Cargar partida");
         SceneManager.LoadScene("LoadGameScene");
     }
 
@@ -67,7 +64,6 @@ public class MainMenuManager : MonoBehaviour, IPointerEnterHandler, IPointerExit
 
     public void ExitGame()
     {
-        Debug.Log("Salir del juego");
         Application.Quit();
     }
 }

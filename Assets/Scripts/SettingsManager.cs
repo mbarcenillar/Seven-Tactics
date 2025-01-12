@@ -29,6 +29,24 @@ public class SettingsManager : MonoBehaviour
 
     private void Start()
     {
+        //Cargar el volumen desde PlayerPrefs
+        float savedVolume = PlayerPrefs.GetFloat("MusicVolume", 1f);
+        float displayedVolume = savedVolume * 10f;
+        volumeSlider.value = displayedVolume;
+        UpdateVolumeDisplay(displayedVolume);
+
+        //Configurar el slider para actualizar el volumen en tiempo real
+        volumeSlider.onValueChanged.AddListener(value =>
+        {
+            float adjustedVolume = Mathf.Clamp(value / 10f, 0f, 1f);
+            PlayerPrefs.SetFloat("MusicVolume", adjustedVolume);
+            PlayerPrefs.Save();
+            UpdateVolumeDisplay(value);
+
+            //Actualizar el volumen del AudioSource directamente
+            UpdateAudioSourceVolume(adjustedVolume);
+        });
+        
         //Cargar ajustes guardados
         LoadSettings();
 
@@ -55,9 +73,18 @@ public class SettingsManager : MonoBehaviour
         discardChangesButton.onClick.AddListener(DiscardAndReturn);
     }
 
-    private void UpdateVolumeDisplay(int volume)
+    private void UpdateAudioSourceVolume(float volume)
     {
-        //Mover el texto debajo del Handle
+        //Buscar el AudioSource en la escena y actualizar su volumen
+        AudioSource audioSource = FindObjectOfType<AudioSource>();
+        if (audioSource != null)
+        {
+            audioSource.volume = volume;
+        }
+    }
+
+    private void UpdateVolumeDisplay(float volume)
+    {
         if (volumeValueText != null)
         {
             volumeValueText.text = volumeSlider.value.ToString();
@@ -69,12 +96,10 @@ public class SettingsManager : MonoBehaviour
         isFullScreen = true;
         Screen.fullScreen = true;
 
-         //Restaurar la resolución nativa si lo deseas
+        //Restaurar la resolución nativa si lo deseas
         int screenWidth = Screen.currentResolution.width;
         int screenHeight = Screen.currentResolution.height;
         Screen.SetResolution(screenWidth, screenHeight, true);
-
-        Debug.Log("Modo pantalla completa activado.");
     }
 
     private void SetWindowed()
@@ -86,8 +111,6 @@ public class SettingsManager : MonoBehaviour
         int windowWidth = 1280;
         int windowHeight = 720;
         Screen.SetResolution(windowWidth, windowHeight, false);
-
-        Debug.Log("Modo ventana activado.");
     }
 
     private void SaveSettings()
@@ -104,8 +127,6 @@ public class SettingsManager : MonoBehaviour
         // Actualizar valores originales
         originalVolume = volumeValue;
         originalFullScreen = isFullScreen;
-        
-        Debug.Log("Ajustes guardados.");
     }
 
     private void LoadSettings()
@@ -117,8 +138,6 @@ public class SettingsManager : MonoBehaviour
         //Cargar el modo pantalla
         isFullScreen = PlayerPrefs.GetInt("FullScreen", 1) == 1;
         Screen.fullScreen = isFullScreen;
-
-        Debug.Log($"Ajustes cargados: Volumen = {savedVolume}, FullScreen = {isFullScreen}");
     }
 
     private void ShowConfirmationPanel()
@@ -146,22 +165,22 @@ public class SettingsManager : MonoBehaviour
 
     private void DiscardAndReturn()
     {
-        // Restaurar el volumen al valor original
+        //Restaurar el volumen al valor original
         int savedVolume = PlayerPrefs.GetInt("Volume", 10);
         volumeSlider.value = savedVolume;
 
-        // Restaurar el modo de pantalla al valor original
+        //Restaurar el modo de pantalla al valor original
         bool savedFullScreen = PlayerPrefs.GetInt("FullScreen", 1) == 1;
         Screen.fullScreen = savedFullScreen;
 
         if (!savedFullScreen)
         {
-            // Si el modo es ventana, ajustar la resolución original
+            //Si el modo es ventana, ajustar la resolución original
             Screen.SetResolution(1280, 720, false);
         }
         else
         {
-            // Restaurar la resolución de pantalla completa
+            //Restaurar la resolución de pantalla completa
             Screen.SetResolution(Screen.currentResolution.width, Screen.currentResolution.height, true);
         }
         BackToMainMenu();

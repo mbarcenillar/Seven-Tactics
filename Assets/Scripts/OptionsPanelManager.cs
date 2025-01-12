@@ -15,15 +15,6 @@ public class OptionsPanelManager : MonoBehaviour
     [Header("Gráficos")]
     [SerializeField] private Button fullScreenButton;
     [SerializeField] private Button windowedButton;
-    
-    [Header("General")]
-    [SerializeField] private Button saveGameButton;
-    [SerializeField] private Button mainMenuButton;
-    [SerializeField] private Button saveButton;
-    [SerializeField] private Button backButton;
-    [SerializeField] private GameObject confirmationPanel;
-    [SerializeField] private Button saveChangesButton;
-    [SerializeField] private Button discardChangesButton;
 
     private bool isFullScreen = true;
     private int originalVolume;
@@ -42,20 +33,10 @@ public class OptionsPanelManager : MonoBehaviour
         fullScreenButton.onClick.AddListener(SetFullScreen);
         windowedButton.onClick.AddListener(SetWindowed);
 
-        //Configurar el botón guardar
-        saveButton.onClick.AddListener(ShowConfirmationPanel);
 
         //Configurar el slider
         volumeSlider.onValueChanged.AddListener(value => UpdateVolumeDisplay(Mathf.RoundToInt(value)));
         UpdateVolumeDisplay(Mathf.RoundToInt(volumeSlider.value));
-
-        //Configurar el panel de confirmación
-        saveChangesButton.onClick.AddListener(SaveAndReturn);
-        discardChangesButton.onClick.AddListener(DiscardAndReturn);
-
-        // Suscribir eventos
-        saveGameButton.onClick.AddListener(SaveGame);
-        mainMenuButton.onClick.AddListener(GoToMainMenu);
     }
 
     private void UpdateVolumeDisplay(int volume)
@@ -123,71 +104,4 @@ public class OptionsPanelManager : MonoBehaviour
 
         Debug.Log($"Ajustes cargados: Volumen = {savedVolume}, FullScreen = {isFullScreen}");
     }
-
-    private void ShowConfirmationPanel()
-    {
-         if (HasPendingChanges())
-        {
-            confirmationPanel.SetActive(true);
-        }
-        else
-        {
-            CloseConfirmationPanel();
-        }
-    }
-
-    private void CloseConfirmationPanel()
-    {
-        confirmationPanel.SetActive(false);
-    }
-
-    private void SaveAndReturn()
-    {
-        SaveSettings();
-        CloseConfirmationPanel();
-    }
-
-    private void SaveGame()
-    {
-        // Lógica para guardar la partida
-        Debug.Log("Partida guardada.");
-        // Aquí puedes llamar a tu método en `DatabaseManager` para guardar la partida
-    }
-
-    private void GoToMainMenu()
-    {
-        // Confirmación antes de salir (opcional)
-        SceneManager.LoadScene("MainMenuScene");
-    }
-
-    private void DiscardAndReturn()
-    {
-        // Restaurar el volumen al valor original
-        int savedVolume = PlayerPrefs.GetInt("Volume", 10);
-        volumeSlider.value = savedVolume;
-
-        // Restaurar el modo de pantalla al valor original
-        bool savedFullScreen = PlayerPrefs.GetInt("FullScreen", 1) == 1;
-        Screen.fullScreen = savedFullScreen;
-
-        if (!savedFullScreen)
-        {
-            // Si el modo es ventana, ajustar la resolución original
-            Screen.SetResolution(1280, 720, false);
-        }
-        else
-        {
-            // Restaurar la resolución de pantalla completa
-            Screen.SetResolution(Screen.currentResolution.width, Screen.currentResolution.height, true);
-        }
-        CloseConfirmationPanel();
-    }
-
-    private bool HasPendingChanges()
-    {
-        int currentVolume = Mathf.RoundToInt(volumeSlider.value);
-        return currentVolume != originalVolume || isFullScreen != originalFullScreen;
-    }
-
-
 }
